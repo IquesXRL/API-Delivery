@@ -15,7 +15,7 @@ EXP_ACCESS_TOKEN = int(os.getenv("EXP_ACCESS_TOKEN"))
 
 # Criando API
 app = FastAPI(
-    title="Projeto Backend Pizzaria",
+    title="API Delivery",
     docs_url="/", # Isso define o Swagger na raiz
     redoc_url=None
 )
@@ -30,3 +30,4 @@ from order_routes import order_router
 app.include_router(auth_router)
 app.include_router(order_router)
 
+#npx neonctl@latest init

@@ -1,16 +1,30 @@
-from sqlalchemy import create_engine, Column, Integer, Float, Boolean, String, ForeignKey
-from sqlalchemy.orm import declarative_base, relationship
-#from sqlalchemy_utils import ChoiceType
+import os
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, DateTime, Boolean
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship
+from datetime import datetime
 
-#Criar/Conectar no Banco
-db = create_engine("sqlite:///banco.db")
+# --- CONFIGURAÇÃO DO BANCO DE DADOS ---
+# Pega a URL do banco do Render/Neon. Se não achar, usa SQLite local.
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./delivery.db")
 
-#Criar Base
-base = declarative_base()
+# Ajuste para compatibilidade do SQLAlchemy com o PostgreSQL no Render
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-#Classes/Tabelas
+# Se for SQLite, precisa do connect_args. Se for PostgreSQL (Neon), não pode ter.
+if "sqlite" in DATABASE_URL:
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
 
-class Usuario(base):
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+# ---------------------------------------
+
+# Daqui para baixo continuam suas classes (User, Produto, Pedido, etc.)
+
+class Usuario(Base):
     __tablename__ = "usuarios"
 
     id = Column("id", Integer, primary_key=True, autoincrement=True)
@@ -28,7 +42,7 @@ class Usuario(base):
         self.admin = admin
 
 
-class Pedido(base):
+class Pedido(Base):
     __tablename__ = "pedidos"
 
     #status_pedidos = (("Pendente","Pendente"),
@@ -53,7 +67,7 @@ class Pedido(base):
         self.preco = sum(item.preco_unitario * item.quantidade for item in self.itens)
 
 
-class ItemPedido(base):
+class ItemPedido(Base):
     __tablename__ = "itens_pedido"
     
     id = Column("id", Integer, primary_key=True, autoincrement=True)
